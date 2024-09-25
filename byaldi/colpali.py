@@ -1,6 +1,8 @@
 import os
 import shutil
 
+# this fork of the byaldi repo is for some modifications on the casting for CPU compatibility.
+
 # Import version directly from the package metadata
 from importlib.metadata import version
 from pathlib import Path
@@ -87,15 +89,25 @@ class ColPaliModel:
         #     print("Adapter name: ", self.pretrained_model_name_or_path)
         # self.model.load_adapter(self.pretrained_model_name_or_path)
 
-        self.model = ColPali.from_pretrained(
-            self.pretrained_model_name_or_path,
-            torch_dtype=torch.bfloat16,
-            device_map="cuda"
-            if device == "cuda"
-            or (isinstance(device, torch.device) and device.type == "cuda")
-            else None,
-            token=kwargs.get("hf_token", None) or os.environ.get("HF_TOKEN"),
-        )
+        print(f'current device: {device}')
+        if device == "cuda":            
+            self.model = ColPali.from_pretrained(
+                self.pretrained_model_name_or_path,
+                torch_dtype=torch.bfloat16,
+                device_map="cuda"
+                if device == "cuda"
+                or (isinstance(device, torch.device) and device.type == "cuda")
+                else None,
+                token=kwargs.get("hf_token", None) or os.environ.get("HF_TOKEN"),
+            )
+        else: 
+            self.model = ColPali.from_pretrained(
+                self.pretrained_model_name_or_path,
+                torch_dtype=torch.float32,
+                device_map="cpu",
+                token=kwargs.get("hf_token", None) or os.environ.get("HF_TOKEN"),
+            )
+                        
         self.model = self.model.eval()
         self.processor = AutoProcessor.from_pretrained(
             self.pretrained_model_name_or_path,
